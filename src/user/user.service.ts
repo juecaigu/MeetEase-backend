@@ -5,6 +5,7 @@ import { User } from './entities/user.entity';
 import { UserRegisterDto } from './dto/user-register.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { md5 } from 'src/common/utils';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class UserService {
@@ -13,6 +14,8 @@ export class UserService {
     private userRepository: Repository<User>,
     @Inject(RedisService)
     private redisService: RedisService,
+    @Inject(EmailService)
+    private emailService: EmailService,
   ) {}
 
   // 在用户注册时生成用户编码
@@ -56,5 +59,12 @@ export class UserService {
     });
     await this.userRepository.save(user);
     return '注册成功';
+  }
+
+  async sendCaptcha(email: string) {
+    const captcha = Math.random().toString(36).substring(2, 15);
+    await this.redisService.set(`captcha_${email}`, captcha, 60 * 5);
+    await this.emailService.sendEmail(email, '验证码', `您的验证码是：${captcha}`);
+    return '验证码已发送';
   }
 }
