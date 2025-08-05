@@ -24,7 +24,7 @@ export class UserRegisterDto {
 
   @IsNotEmpty({ message: '昵称不能为空' })
   @IsString({ message: '昵称必须是字符串' })
-  @Length(3, 50, { message: '昵称长度不能小于3且不能大于50' })
+  @Length(2, 50, { message: '昵称长度不能小于2且不能大于50' })
   nick_name: string;
 
   @IsString({ message: '头像必须是字符串' })

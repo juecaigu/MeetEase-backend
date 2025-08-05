@@ -35,13 +35,11 @@ export class User {
 
   @Column({
     comment: '邮箱',
-    unique: true,
   })
   email: string;
 
   @Column({
     comment: '手机号',
-    unique: true,
   })
   phone: string;
 
@@ -52,11 +50,13 @@ export class User {
 
   @Column({
     comment: '创建时间',
+    default: () => 'CURRENT_TIMESTAMP',
   })
   create_time: Date;
 
   @Column({
     comment: '更新时间',
+    default: () => 'CURRENT_TIMESTAMP',
   })
   update_time: Date;
 
