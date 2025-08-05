@@ -12,7 +12,7 @@ import { EmailModule } from './email/email.module';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
-  envFilePath: process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev',
+  envFilePath: ['src/.env'],
   cache: true,
 });
 
