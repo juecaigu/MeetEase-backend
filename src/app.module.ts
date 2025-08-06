@@ -4,16 +4,32 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
-import { Role } from './user/entities/role.entity';
-import { Permission } from './user/entities/permission.entity';
+import { Role } from './role/entities/role.entity';
+import { Permission } from './permission/entities/permission.entity';
 import { RedisModule } from './redis/redis.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EmailModule } from './email/email.module';
+import { RoleModule } from './role/role.module';
+import { PermissionModule } from './permission/permission.module';
+import { LoginGuard } from './user/login.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
+import { PermissionGuard } from './permission/permission.guard';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
   envFilePath: ['src/.env'],
   cache: true,
+});
+
+const jwtModule = JwtModule.registerAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  global: true,
+  useFactory: (configService: ConfigService) => ({
+    secret: configService.get<string>('JWT_SECRET'),
+    signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') },
+  }),
 });
 
 const typeOrmModule = TypeOrmModule.forRootAsync({
@@ -37,8 +53,18 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
 });
 
 @Module({
-  imports: [typeOrmModule, UserModule, RedisModule, configModule, EmailModule],
+  imports: [typeOrmModule, UserModule, RedisModule, configModule, jwtModule, EmailModule, RoleModule, PermissionModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: LoginGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
+    },
+  ],
 })
 export class AppModule {}

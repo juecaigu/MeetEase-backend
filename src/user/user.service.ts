@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -6,7 +6,10 @@ import { UserRegisterDto } from './dto/user-register.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { md5 } from 'src/common/utils';
 import { EmailService } from 'src/email/email.service';
-
+import { UserLoginDto } from './dto/user-login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { LoginUserVo } from './vo/login-user.vo';
+import { Permission } from 'src/permission/entities/permission.entity';
 @Injectable()
 export class UserService {
   constructor(
@@ -16,6 +19,8 @@ export class UserService {
     private redisService: RedisService,
     @Inject(EmailService)
     private emailService: EmailService,
+    @Inject(JwtService)
+    private jwtService: JwtService,
   ) {}
 
   // 在用户注册时生成用户编码
@@ -66,5 +71,87 @@ export class UserService {
     await this.redisService.set(`captcha_${email}`, captcha, 60 * 5);
     await this.emailService.sendEmail(email, '验证码', `您的验证码是：${captcha}`);
     return '验证码已发送';
+  }
+
+  async login(userLoginDto: UserLoginDto) {
+    const { username, password } = userLoginDto;
+    const user = await this.userRepository.findOne({
+      where: { username },
+      relations: ['roles'],
+    });
+    if (!user) {
+      throw new BadRequestException('用户名或密码错误');
+    }
+    const passwordHash = md5(password + user.salt);
+    if (passwordHash !== user.password) {
+      throw new BadRequestException('用户名或密码错误');
+    }
+    const vo = new LoginUserVo();
+    vo.userInfo = {
+      id: user.id,
+      username: user.username,
+      code: user.user_code,
+      email: user.email,
+      phone: user.phone,
+      nick_name: user.nick_name,
+      avatar: user.avatar,
+      created_time: user.create_time,
+      updated_time: user.update_time,
+      roles: user.roles,
+      permissions: user.roles.reduce((acc: Permission[], role) => {
+        if (Array.isArray(role.permissions)) {
+          role.permissions.forEach((permission) => {
+            if (!acc.find((p) => p.id === permission.id)) {
+              acc.push(permission);
+            }
+          });
+        }
+        return acc;
+      }, []),
+    };
+    vo.token = this.jwtService.sign({
+      id: user.id,
+      username: user.username,
+      roles: vo.userInfo.roles,
+      permissions: vo.userInfo.permissions,
+    });
+    vo.fresh_token = this.jwtService.sign({ id: user.id }, { expiresIn: '7d' });
+    return vo;
+  }
+
+  async refreshToken(freshToken: string) {
+    try {
+      const user: { id: number } = this.jwtService.verify(freshToken);
+      const userInfo = await this.userRepository.findOne({ where: { id: user.id }, relations: ['roles'] });
+      if (!userInfo) {
+        throw new UnauthorizedException('用户不存在');
+      }
+      const token = this.jwtService.sign({
+        id: userInfo.id,
+        username: userInfo.username,
+        roles: userInfo.roles,
+        permissions: [],
+      });
+      const fresh_token = this.jwtService.sign({ id: user.id }, { expiresIn: '7d' });
+      return {
+        token,
+        fresh_token,
+      };
+    } catch (error) {
+      console.log('error', error);
+      throw new UnauthorizedException('token已失效，请重新登录！');
+    }
+  }
+
+  async list(id: number) {
+    if (id) {
+      const user = await this.userRepository.findOne({ where: { id }, relations: ['roles'] });
+      if (!user) {
+        throw new BadRequestException('用户不存在');
+      }
+      return user;
+    }
+    const users = await this.userRepository.find({ relations: ['roles'] });
+    return users;
   }
 }

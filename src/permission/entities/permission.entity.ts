@@ -17,4 +17,9 @@ export class Permission {
     comment: '权限描述',
   })
   description: string;
+
+  @Column({
+    comment: '权限模块',
+  })
+  module: string;
 }

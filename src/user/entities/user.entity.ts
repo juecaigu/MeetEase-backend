@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
-import { Role } from './role.entity';
+import { Role } from '../../role/entities/role.entity';
 
 @Entity({
   name: 'user',
@@ -71,7 +71,7 @@ export class User {
   })
   salt: string;
 
-  @ManyToMany(() => Role)
+  @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_role',
     joinColumn: {

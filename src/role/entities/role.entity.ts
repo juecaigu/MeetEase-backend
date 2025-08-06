@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
-import { Permission } from './permission.entity';
+import { Permission } from '../../permission/entities/permission.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity({
   name: 'role',
@@ -7,6 +8,12 @@ import { Permission } from './permission.entity';
 export class Role {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({
+    comment: '是否为超级管理员角色',
+    default: false,
+  })
+  admin: boolean;
 
   @Column({
     length: 50,
@@ -25,7 +32,7 @@ export class Role {
   })
   create_time: Date;
 
-  @ManyToMany(() => Permission)
+  @ManyToMany(() => Permission, { cascade: true })
   @JoinTable({
     name: 'role_permission',
     joinColumn: {
@@ -38,4 +45,7 @@ export class Role {
     },
   })
   permissions: Permission[];
+
+  @ManyToMany(() => User, (user) => user.roles)
+  users: User[];
 }
