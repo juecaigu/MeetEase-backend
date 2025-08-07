@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UserRegisterDto } from './dto/user-register.dto';
 import { RedisService } from 'src/redis/redis.service';
@@ -10,11 +10,18 @@ import { UserLoginDto } from './dto/user-login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginUserVo } from './vo/login-user.vo';
 import { Permission } from 'src/permission/entities/permission.entity';
+import { UserDetailVo } from './vo/user-detail.vo';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserInfoDto } from './dto/update-info.dto';
+import { AssignRoleDto } from './dto/assign-role.dto';
+import { Role } from 'src/role/entities/role.entity';
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
     @Inject(RedisService)
     private redisService: RedisService,
     @Inject(EmailService)
@@ -36,8 +43,19 @@ export class UserService {
     return dateStr + randomNum;
   }
 
+  private generateUserDetailVo(user: User) {
+    const vo = new UserDetailVo();
+    vo.id = user.id;
+    vo.username = user.username;
+    vo.code = user.user_code;
+    vo.email = user.email;
+    vo.phone = user.phone;
+    vo.nick_name = user.nick_name;
+    return vo;
+  }
+
   async register(userRegisterDto: UserRegisterDto) {
-    const { username, password, email, phone, nick_name, avatar, captcha } = userRegisterDto;
+    const { username, password, email, phone, nickName, avatar, captcha } = userRegisterDto;
     // 验证验证码
     const cacheCaptcha = await this.redisService.get(`captcha_${email}`);
     if (!cacheCaptcha) {
@@ -57,12 +75,13 @@ export class UserService {
       password: passwordHash,
       email,
       phone,
-      nick_name,
+      nick_name: nickName,
       avatar,
       salt,
       user_code: this.generateUserCode(),
     });
     await this.userRepository.save(user);
+    await this.redisService.del(`captcha_${email}`);
     return '注册成功';
   }
 
@@ -85,6 +104,9 @@ export class UserService {
     const passwordHash = md5(password + user.salt);
     if (passwordHash !== user.password) {
       throw new BadRequestException('用户名或密码错误');
+    }
+    if (user.status === 0) {
+      throw new BadRequestException('用户已冻结');
     }
     const vo = new LoginUserVo();
     vo.userInfo = {
@@ -149,9 +171,63 @@ export class UserService {
       if (!user) {
         throw new BadRequestException('用户不存在');
       }
-      return user;
+      return this.generateUserDetailVo(user);
     }
     const users = await this.userRepository.find({ relations: ['roles'] });
-    return users;
+    return users.map((user) => this.generateUserDetailVo(user));
+  }
+
+  async updatePassword(updatePasswordDto: UpdatePasswordDto) {
+    const { id, oldPassword, newPassword, captcha } = updatePasswordDto;
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+    const cacheCaptcha = await this.redisService.get(`captcha_${user.email}`);
+    if (!cacheCaptcha || cacheCaptcha !== captcha) {
+      throw new BadRequestException('验证码错误');
+    }
+    const oldPasswordHash = md5(oldPassword + user.salt);
+    if (oldPasswordHash !== user.password) {
+      throw new BadRequestException('旧密码错误');
+    }
+    const newPasswordHash = md5(newPassword + user.salt);
+    await this.userRepository.update(id, { password: newPasswordHash });
+    await this.redisService.del(`captcha_${user.email}`);
+    return '密码修改成功';
+  }
+
+  async updateInfo(updateUserInfoDto: UpdateUserInfoDto) {
+    const { id, nickName, avatar, phone, email } = updateUserInfoDto;
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+    await this.userRepository.update(id, { nick_name: nickName, avatar, phone, email });
+    return '信息修改成功';
+  }
+
+  async assignRole(assignRoleDto: AssignRoleDto) {
+    const { id, roleIds } = assignRoleDto;
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+    const roles = await this.roleRepository.find({ where: { id: In(roleIds) } });
+    user.roles = roles;
+    await this.userRepository.save(user);
+    return '角色分配成功';
+  }
+
+  async frozeUser(id: number, status: 0 | 1) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+    if (user.status === status) {
+      return '用户状态已为' + (status === 0 ? '冻结' : '解冻');
+    }
+    await this.userRepository.update(id, { status: status });
+    return '操作成功';
   }
 }
