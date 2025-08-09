@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { FindOptionsWhere, In, Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UserRegisterDto } from './dto/user-register.dto';
 import { RedisService } from 'src/redis/redis.service';
@@ -50,7 +50,12 @@ export class UserService {
     vo.code = user.user_code;
     vo.email = user.email;
     vo.phone = user.phone;
-    vo.nick_name = user.nick_name;
+    vo.nickName = user.nick_name;
+    vo.status = user.status === 1;
+    vo.roles = user.roles.map((role) => ({
+      id: role.id,
+      name: role.name,
+    }));
     return vo;
   }
 
@@ -165,16 +170,29 @@ export class UserService {
     }
   }
 
-  async list(id: number) {
-    if (id) {
-      const user = await this.userRepository.findOne({ where: { id }, relations: ['roles'] });
-      if (!user) {
-        throw new BadRequestException('用户不存在');
-      }
-      return this.generateUserDetailVo(user);
+  async list(page: number, size: number, username: string, nickName: string, email: string, status: boolean) {
+    const pageNum = Math.max(page, 1);
+    const pageSize = Math.max(size, 10);
+    const where: FindOptionsWhere<User> = {};
+    if (username) {
+      where.username = Like(`%${username}%`);
     }
-    const users = await this.userRepository.find({ relations: ['roles'] });
-    return users.map((user) => this.generateUserDetailVo(user));
+    if (nickName) {
+      where.nick_name = Like(`%${nickName}%`);
+    }
+    if (email) {
+      where.email = Like(`%${email}%`);
+    }
+    if (status !== undefined) {
+      where.status = status ? 1 : 0;
+    }
+    const [users, total] = await this.userRepository.findAndCount({
+      where,
+      skip: (pageNum - 1) * pageSize,
+      take: pageSize,
+      relations: ['roles'],
+    });
+    return { users: users.map((user) => this.generateUserDetailVo(user)), total };
   }
 
   async updatePassword(updatePasswordDto: UpdatePasswordDto) {

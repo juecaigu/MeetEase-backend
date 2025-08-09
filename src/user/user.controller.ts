@@ -33,8 +33,15 @@ export class UserController {
   @SetMetadata('requireLogin', true)
   @SetMetadata('requirePermission', ['user:list'])
   @Get('list')
-  list(@Query('id') id: number) {
-    return this.userService.list(id);
+  list(
+    @Query('pageNo', ParseIntPipe) pageNo: number,
+    @Query('pageSize', ParseIntPipe) pageSize: number,
+    @Query('username') username: string,
+    @Query('nickName') nickName: string,
+    @Query('email') email: string,
+    @Query('status') status: boolean,
+  ) {
+    return this.userService.list(pageNo, pageSize, username, nickName, email, status);
   }
 
   @SetMetadata('requireLogin', true)
@@ -60,6 +67,6 @@ export class UserController {
   @SetMetadata('requirePermission', ['user:froze'])
   @Get('froze')
   frozeUser(@Query('id', ParseIntPipe) id: number, @Query('status', ParseBoolPipe) status: boolean) {
-    return this.userService.frozeUser(id, status ? 0 : 1);
+    return this.userService.frozeUser(id, status ? 1 : 0);
   }
 }

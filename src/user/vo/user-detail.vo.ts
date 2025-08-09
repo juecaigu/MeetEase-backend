@@ -4,6 +4,11 @@ export class UserDetailVo {
   code: string;
   email: string;
   phone: string;
-  nick_name: string;
+  nickName: string;
   avatar: string;
+  status: boolean;
+  roles: {
+    id: number;
+    name: string;
+  }[];
 }
