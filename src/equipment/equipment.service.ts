@@ -3,8 +3,9 @@ import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { Repository } from 'typeorm';
 import { Equipment } from './entities/equipment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PurchaseDate, RemainingQuantity, Status } from './type';
 import { EquipmentVo } from './vo/equipment.vo';
+import { SearchEquipmentDto } from './dto/search-equipment.dto';
+import { Expression } from './type';
 
 @Injectable()
 export class EquipmentService {
@@ -20,17 +21,9 @@ export class EquipmentService {
     return '设备创建成功';
   }
 
-  async list(
-    page: number,
-    size: number,
-    name: string,
-    type: string,
-    status: Status,
-    description: string,
-    price: RemainingQuantity,
-    remainingQuantity: RemainingQuantity,
-    purchaseDate: PurchaseDate,
-  ) {
+  async list(searchEquipmentDto: SearchEquipmentDto) {
+    const { pageNo, pageSize, name, type, status, description, price, remainingQuantity, purchaseDate } =
+      searchEquipmentDto;
     const queryBuilder = this.equipmentRepository.createQueryBuilder('equipment');
     if (name) {
       queryBuilder.where('equipment.name LIKE :name', { name: `%${name}%` });
@@ -44,27 +37,49 @@ export class EquipmentService {
     if (description) {
       queryBuilder.where('equipment.description LIKE :description', { description: `%${description}%` });
     }
+    if (price?.expression && price?.value !== undefined) {
+      console.log('adsffeafeaefagaeaeef', price);
+      const { expression, value } = price;
+      if (expression === Expression.BETWEEN) {
+        queryBuilder.where(`equipment.price BETWEEN :price1 AND :price2`, {
+          price1: value[0] as number,
+          price2: value[1] as number,
+        });
+      } else {
+        queryBuilder.where(`equipment.price ${expression} :price`, {
+          price: value,
+        });
+      }
+    }
     if (remainingQuantity?.expression && remainingQuantity?.value !== undefined) {
       const { expression, value } = remainingQuantity;
-      queryBuilder.where(`equipment.remaining_quantity ${expression} :remainingQuantity`, {
-        remainingQuantity: value,
-      });
-    }
-    if (price?.expression && price?.value !== undefined) {
-      const { expression, value } = price;
-      queryBuilder.where(`equipment.price ${expression} :price`, {
-        price: value,
-      });
+      if (expression === Expression.BETWEEN) {
+        queryBuilder.where(`equipment.remaining_quantity BETWEEN :remainingQuantity1 AND :remainingQuantity2`, {
+          remainingQuantity1: value[0] as number,
+          remainingQuantity2: value[1] as number,
+        });
+      } else {
+        queryBuilder.where(`equipment.remaining_quantity ${expression} :remainingQuantity`, {
+          remainingQuantity: value,
+        });
+      }
     }
     if (purchaseDate?.expression && purchaseDate?.value !== undefined) {
       const { expression, value } = purchaseDate;
-      queryBuilder.where(`equipment.purchase_date ${expression} :purchaseDate`, {
-        purchaseDate: value,
-      });
+      if (expression === Expression.BETWEEN) {
+        queryBuilder.where(`equipment.purchase_date BETWEEN :purchaseDate1 AND :purchaseDate2`, {
+          purchaseDate1: value[0] as Date,
+          purchaseDate2: value[1] as Date,
+        });
+      } else {
+        queryBuilder.where(`equipment.purchase_date ${expression} :purchaseDate`, {
+          purchaseDate: value,
+        });
+      }
     }
     const [equipments, total] = await queryBuilder
-      .skip((page - 1) * size)
-      .take(size)
+      .skip((pageNo - 1) * pageSize)
+      .take(pageSize)
       .getManyAndCount();
     return {
       equipments: equipments.map((equipment) => {
