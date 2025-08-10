@@ -221,7 +221,7 @@ export class UserService {
     if (!user) {
       throw new BadRequestException('用户不存在');
     }
-    await this.userRepository.update(id, { nick_name: nickName, avatar, phone, email });
+    await this.userRepository.update(id, { nick_name: nickName, avatar, phone, email, update_time: new Date() });
     return '信息修改成功';
   }
 

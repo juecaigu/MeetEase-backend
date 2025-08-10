@@ -32,6 +32,9 @@ export class Role {
   })
   create_time: Date;
 
+  @Column({ comment: '更新时间', default: () => 'CURRENT_TIMESTAMP' })
+  update_time: Date;
+
   @ManyToMany(() => Permission, { cascade: true })
   @JoinTable({
     name: 'role_permission',
