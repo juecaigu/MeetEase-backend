@@ -15,6 +15,11 @@ import { LoginGuard } from './user/login.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { PermissionGuard } from './permission/permission.guard';
+import { MeetingRoomModule } from './meeting-room/meeting-room.module';
+import { MeetingRoom } from './meeting-room/entities/meeting-room.entity';
+import { Equipment } from './equipment/entities/equipment.entity';
+import { EquipmentModule } from './equipment/equipment.module';
+import { ImageModule } from './image/image.module';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
@@ -42,7 +47,7 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
     username: configService.get<string>('DB_USERNAME'),
     password: configService.get<string>('DB_PASSWORD'),
     database: configService.get<string>('DB_DATABASE'),
-    entities: [User, Role, Permission],
+    entities: [User, Role, Permission, MeetingRoom, Equipment],
     synchronize: true,
     logging: true,
     connectorPackage: 'mysql2',
@@ -53,7 +58,19 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
 });
 
 @Module({
-  imports: [typeOrmModule, UserModule, RedisModule, configModule, jwtModule, EmailModule, RoleModule, PermissionModule],
+  imports: [
+    typeOrmModule,
+    UserModule,
+    RedisModule,
+    configModule,
+    jwtModule,
+    EmailModule,
+    RoleModule,
+    PermissionModule,
+    MeetingRoomModule,
+    EquipmentModule,
+    ImageModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
