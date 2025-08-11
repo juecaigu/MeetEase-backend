@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { MeetingRoom } from 'src/meeting-room/entities/meeting-room.entity';
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Equipment {
@@ -37,4 +38,20 @@ export class Equipment {
 
   @Column({ comment: '采购日期' })
   purchase_date: Date;
+
+  @ManyToMany(() => MeetingRoom, {
+    onDelete: 'CASCADE',
+  })
+  @JoinTable({
+    name: 'meeting_room_equipment',
+    joinColumn: {
+      name: 'equipment_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'meeting_room_id',
+      referencedColumnName: 'id',
+    },
+  })
+  meeting_room: MeetingRoom[];
 }

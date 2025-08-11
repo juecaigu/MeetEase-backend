@@ -1,8 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, ParseIntPipe, ParseEnumPipe } from '@nestjs/common';
 import { MeetingRoomService } from './meeting-room.service';
 import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
 import { SetMetadata } from '@nestjs/common';
 import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
+import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
+import { Status } from './type';
 
 @SetMetadata('requireLogin', true)
 @SetMetadata('requirePermission', ['meeting-room'])
@@ -15,9 +17,28 @@ export class MeetingRoomController {
     return this.meetingRoomService.create(createMeetingRoomDto);
   }
 
+  @Post('update')
+  update(@Body() updateMeetingRoomDto: UpdateMeetingRoomDto) {
+    return this.meetingRoomService.update(updateMeetingRoomDto);
+  }
+
+  @Post('update/equipment')
+  updateEquipment(@Body() updateMeetingRoomDto: { id: number; equipment: number[] }) {
+    return this.meetingRoomService.updateEquipment(updateMeetingRoomDto);
+  }
+
+  @Get('update/status')
+  updateStatus(@Query('id', ParseIntPipe) id: number, @Query('status', new ParseEnumPipe(Status)) status: Status) {
+    return this.meetingRoomService.updateStatus({ id, status });
+  }
+
   @Post('list')
   list(@Body() listMeetingRoomDto: SearchMeetingRoomDto) {
-    console.log('listMeetingRoomDto', listMeetingRoomDto);
     return this.meetingRoomService.list(listMeetingRoomDto);
+  }
+
+  @Get('delete')
+  delete(@Query('id', ParseIntPipe) id: number) {
+    return this.meetingRoomService.delete(id);
   }
 }

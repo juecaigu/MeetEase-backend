@@ -10,7 +10,7 @@ const configService = new ConfigService();
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule);
   app.useGlobalInterceptors(new ResponseInterceptor());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new CustomExpectionFilter());
   app.useStaticAssets('uploads', {
     prefix: '/uploads',

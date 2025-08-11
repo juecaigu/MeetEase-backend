@@ -1,5 +1,6 @@
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Equipment } from 'src/equipment/entities/equipment.entity';
+import { Status } from '../type';
 
 @Entity()
 export class MeetingRoom {
@@ -19,12 +20,14 @@ export class MeetingRoom {
   location: string;
 
   @Column({ comment: '会议室状态,0:空闲,1:使用中,2:维护中', default: 0 })
-  status: number;
+  status: Status;
 
   @Column({ comment: '会议室容量' })
   capacity: number;
 
-  @ManyToMany(() => Equipment)
+  @ManyToMany(() => Equipment, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable({
     name: 'meeting_room_equipment',
     joinColumn: {

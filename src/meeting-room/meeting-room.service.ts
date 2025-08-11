@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MeetingRoom } from './entities/meeting-room.entity';
@@ -6,6 +6,8 @@ import { In, Repository } from 'typeorm';
 import { Equipment } from 'src/equipment/entities/equipment.entity';
 import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
 import { Expression } from 'src/type/type';
+import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
+import { Status } from './type';
 
 @Injectable()
 export class MeetingRoomService {
@@ -26,6 +28,42 @@ export class MeetingRoomService {
     meetingRoom.equipment = equipment;
     await this.meetingRoomRepository.save(meetingRoom);
     return '创建成功';
+  }
+
+  async update(updateMeetingRoomDto: UpdateMeetingRoomDto) {
+    const { id, name, location, status, capacity, description } = updateMeetingRoomDto;
+    const findMeetingRoom = await this.meetingRoomRepository.findOne({ where: { id } });
+    if (!findMeetingRoom) {
+      throw new NotFoundException('会议室不存在');
+    }
+    Object.assign(findMeetingRoom, { name, location, status, capacity, description });
+    await this.meetingRoomRepository.update(id, findMeetingRoom);
+    return '更新成功';
+  }
+
+  async updateEquipment(updateMeetingRoomDto: { id: number; equipment: number[] }) {
+    const { id, equipment } = updateMeetingRoomDto;
+    const findMeetingRoom = await this.meetingRoomRepository.findOne({ where: { id } });
+    if (!findMeetingRoom) {
+      throw new NotFoundException('会议室不存在');
+    }
+    const equipmentList = await this.equipmentRepository.find({ where: { id: In(equipment) } });
+    findMeetingRoom.equipment = equipmentList;
+    await this.meetingRoomRepository.save(findMeetingRoom);
+    return '更新成功';
+  }
+
+  async updateStatus(query: { id: number; status: Status }) {
+    const { id, status } = query;
+    const findMeetingRoom = await this.meetingRoomRepository.findOne({ where: { id } });
+    if (!findMeetingRoom) {
+      throw new NotFoundException('会议室不存在');
+    }
+    if (status === findMeetingRoom.status) {
+      return '更新成功';
+    }
+    await this.meetingRoomRepository.update(id, { status });
+    return '更新成功';
   }
 
   async list(searchMeetingRoomDto: SearchMeetingRoomDto) {
@@ -63,5 +101,15 @@ export class MeetingRoomService {
       data: meetingRooms,
       total,
     };
+  }
+
+  async delete(id: number) {
+    const findMeetingRoom = await this.meetingRoomRepository.findOne({ where: { id } });
+    if (!findMeetingRoom) {
+      throw new NotFoundException('会议室不存在');
+    }
+    await this.meetingRoomRepository.delete(id);
+    // TODO: 删除会议室关联的设备,释放设备占用
+    return '删除成功';
   }
 }
