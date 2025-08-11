@@ -1,26 +1,67 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
-import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MeetingRoom } from './entities/meeting-room.entity';
+import { In, Repository } from 'typeorm';
+import { Equipment } from 'src/equipment/entities/equipment.entity';
+import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
+import { Expression } from 'src/type/type';
 
 @Injectable()
 export class MeetingRoomService {
-  create(createMeetingRoomDto: CreateMeetingRoomDto) {
-    return 'This action adds a new meetingRoom';
+  constructor(
+    @InjectRepository(MeetingRoom) private readonly meetingRoomRepository: Repository<MeetingRoom>,
+    @InjectRepository(Equipment) private readonly equipmentRepository: Repository<Equipment>,
+  ) {}
+
+  async create(createMeetingRoomDto: CreateMeetingRoomDto) {
+    const meetingRoom = new MeetingRoom();
+    meetingRoom.code = createMeetingRoomDto.code;
+    meetingRoom.name = createMeetingRoomDto.name;
+    meetingRoom.description = createMeetingRoomDto.description;
+    meetingRoom.status = createMeetingRoomDto.status;
+    meetingRoom.capacity = createMeetingRoomDto.capacity;
+    meetingRoom.location = createMeetingRoomDto.location;
+    const equipment = await this.equipmentRepository.find({ where: { id: In(createMeetingRoomDto.equipment) } });
+    meetingRoom.equipment = equipment;
+    await this.meetingRoomRepository.save(meetingRoom);
+    return '创建成功';
   }
 
-  findAll() {
-    return `This action returns all meetingRoom`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} meetingRoom`;
-  }
-
-  update(id: number, updateMeetingRoomDto: UpdateMeetingRoomDto) {
-    return `This action updates a #${id} meetingRoom`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} meetingRoom`;
+  async list(searchMeetingRoomDto: SearchMeetingRoomDto) {
+    const { pageNo, pageSize, name, code, location, status, capacity } = searchMeetingRoomDto;
+    console.log('searchMeetingRoomDto', searchMeetingRoomDto);
+    const queryBuilder = this.meetingRoomRepository.createQueryBuilder('meetingRoom');
+    if (name) {
+      queryBuilder.where('meetingRoom.name LIKE :name', { name: `%${name}%` });
+    }
+    if (code) {
+      queryBuilder.where('meetingRoom.code LIKE :code', { code: `%${code}%` });
+    }
+    if (location) {
+      queryBuilder.where('meetingRoom.location LIKE :location', { location: `%${location}%` });
+    }
+    if (status) {
+      queryBuilder.where('meetingRoom.status = :status', { status });
+    }
+    if (capacity?.expression && capacity?.value !== undefined) {
+      const { expression, value } = capacity;
+      if (expression === Expression.BETWEEN) {
+        queryBuilder.where('meetingRoom.capacity BETWEEN :capacity1 AND :capacity2', {
+          capacity1: value[0] as number,
+          capacity2: value[1] as number,
+        });
+      } else {
+        queryBuilder.where(`meetingRoom.capacity ${expression} :capacity`, { capacity: value });
+      }
+    }
+    const [meetingRooms, total] = await queryBuilder
+      .skip((pageNo - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+    return {
+      data: meetingRooms,
+      total,
+    };
   }
 }

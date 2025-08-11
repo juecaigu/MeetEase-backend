@@ -5,7 +5,7 @@ import { Equipment } from './entities/equipment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EquipmentVo } from './vo/equipment.vo';
 import { SearchEquipmentDto } from './dto/search-equipment.dto';
-import { Expression } from './type';
+import { Expression } from 'src/type/type';
 
 @Injectable()
 export class EquipmentService {

@@ -19,7 +19,6 @@ import { MeetingRoomModule } from './meeting-room/meeting-room.module';
 import { MeetingRoom } from './meeting-room/entities/meeting-room.entity';
 import { Equipment } from './equipment/entities/equipment.entity';
 import { EquipmentModule } from './equipment/equipment.module';
-import { ImageModule } from './image/image.module';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
@@ -69,7 +68,6 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
     PermissionModule,
     MeetingRoomModule,
     EquipmentModule,
-    ImageModule,
   ],
   controllers: [AppController],
   providers: [

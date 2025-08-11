@@ -1,8 +1,8 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { PurchaseDate, RemainingQuantity, Status } from '../type';
+import { Capacity, Status } from '../type';
 import { IsExpressionObject } from 'src/decorators/is-expression-object.decorator';
 
-export class SearchEquipmentDto {
+export class SearchMeetingRoomDto {
   @IsNotEmpty()
   @IsNumber()
   pageNo: number;
@@ -17,25 +17,16 @@ export class SearchEquipmentDto {
 
   @IsOptional()
   @IsString()
-  type: string;
-
-  @IsOptional()
-  @IsNumber()
-  status: Status;
+  code: string;
 
   @IsOptional()
   @IsString()
-  description: string;
+  location: string;
+
+  @IsOptional()
+  status: Status;
 
   @IsOptional()
   @IsExpressionObject()
-  price: RemainingQuantity;
-
-  @IsOptional()
-  @IsExpressionObject()
-  remainingQuantity: RemainingQuantity;
-
-  @IsOptional()
-  @IsExpressionObject()
-  purchaseDate: PurchaseDate;
+  capacity: Capacity;
 }

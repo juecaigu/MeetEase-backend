@@ -12,13 +12,13 @@ export class MeetingRoom {
   @Column({ comment: '会议室名称' })
   name: string;
 
-  @Column({ comment: '会议室描述' })
+  @Column({ comment: '会议室描述', nullable: true })
   description: string;
 
   @Column({ comment: '会议室位置' })
   location: string;
 
-  @Column({ comment: '会议室状态,0:空闲,1:使用中,2:维护中' })
+  @Column({ comment: '会议室状态,0:空闲,1:使用中,2:维护中', default: 0 })
   status: number;
 
   @Column({ comment: '会议室容量' })
@@ -38,7 +38,7 @@ export class MeetingRoom {
   })
   equipment: Equipment[];
 
-  @Column({ comment: '会议室图片' })
+  @Column({ comment: '会议室图片', nullable: true })
   image: string;
 
   @Column({ comment: '创建时间', default: () => 'CURRENT_TIMESTAMP' })
