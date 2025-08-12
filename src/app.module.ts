@@ -19,6 +19,9 @@ import { MeetingRoomModule } from './meeting-room/meeting-room.module';
 import { MeetingRoom } from './meeting-room/entities/meeting-room.entity';
 import { Equipment } from './equipment/entities/equipment.entity';
 import { EquipmentModule } from './equipment/equipment.module';
+import { BookingModule } from './booking/booking.module';
+import { Booking } from './booking/entities/booking.entity';
+import { Attendees } from './booking/entities/attendees.entity';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
@@ -46,7 +49,7 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
     username: configService.get<string>('DB_USERNAME'),
     password: configService.get<string>('DB_PASSWORD'),
     database: configService.get<string>('DB_DATABASE'),
-    entities: [User, Role, Permission, MeetingRoom, Equipment],
+    entities: [User, Role, Permission, MeetingRoom, Equipment, Booking, Attendees],
     synchronize: true,
     logging: true,
     connectorPackage: 'mysql2',
@@ -68,6 +71,7 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
     PermissionModule,
     MeetingRoomModule,
     EquipmentModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [

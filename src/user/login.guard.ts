@@ -6,7 +6,7 @@ import { Permission } from 'src/permission/entities/permission.entity';
 import { Request } from 'express';
 import { Role } from 'src/role/entities/role.entity';
 
-interface JwtPayload {
+export interface JwtPayload {
   id: number;
   username: string;
   roles: Role[];
