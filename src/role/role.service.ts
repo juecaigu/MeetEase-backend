@@ -37,7 +37,7 @@ export class RoleService {
         where: { id: In(updateRoleDto.permissions) },
       });
       role.permissions = permissions;
-      role.update_time = new Date();
+      role.updateTime = new Date();
       await this.roleRepository.save(role);
       return '更新成功';
     } else {

@@ -20,7 +20,7 @@ export class User {
     comment: '用户编码',
     unique: true,
   })
-  user_code: string;
+  userCode: string;
 
   @Column({
     comment: '密码',
@@ -31,7 +31,7 @@ export class User {
     length: 50,
     comment: '昵称',
   })
-  nick_name: string;
+  nickName: string;
 
   @Column({
     comment: '邮箱',
@@ -52,13 +52,13 @@ export class User {
     comment: '创建时间',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  create_time: Date;
+  createTime: Date;
 
   @Column({
     comment: '更新时间',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  update_time: Date;
+  updateTime: Date;
 
   @Column({
     comment: '状态',

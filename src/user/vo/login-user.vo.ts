@@ -7,10 +7,10 @@ interface UserInfo {
   code: string;
   email: string;
   phone: string;
-  nick_name: string;
+  nickName: string;
   avatar: string;
-  created_time: Date;
-  updated_time: Date;
+  createdTime: Date;
+  updatedTime: Date;
   roles: Role[];
   permissions: Permission[];
 }

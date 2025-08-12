@@ -89,8 +89,8 @@ export class EquipmentService {
         equipmentVo.type = equipment.type;
         equipmentVo.code = equipment.code;
         equipmentVo.status = equipment.status;
-        equipmentVo.remainingQuantity = equipment.remaining_quantity;
-        equipmentVo.purchaseDate = equipment.purchase_date;
+        equipmentVo.remainingQuantity = equipment.remainingQuantity;
+        equipmentVo.purchaseDate = equipment.purchaseDate;
         equipmentVo.price = equipment.price;
         equipmentVo.quantity = equipment.quantity;
         equipmentVo.supplier = equipment.supplier;

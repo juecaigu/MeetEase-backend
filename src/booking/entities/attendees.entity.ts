@@ -10,10 +10,10 @@ export class Attendees {
   booking: Booking;
 
   @Column({ type: 'int', comment: '用户ID', nullable: true })
-  user_id?: number;
+  userId?: number;
 
   @Column({ type: 'varchar', length: 255, comment: '用户编码', nullable: true })
-  user_code?: string;
+  userCode?: string;
 
   @Column({ type: 'varchar', length: 255, comment: '参会人员姓名', nullable: true })
   name?: string;

@@ -45,8 +45,8 @@ export class MeetingRoom {
   image: string;
 
   @Column({ comment: '创建时间', default: () => 'CURRENT_TIMESTAMP' })
-  create_time: Date;
+  createTime: Date;
 
   @Column({ comment: '更新时间', default: () => 'CURRENT_TIMESTAMP' })
-  update_time: Date;
+  updateTime: Date;
 }

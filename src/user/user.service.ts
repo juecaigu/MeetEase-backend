@@ -47,10 +47,10 @@ export class UserService {
     const vo = new UserDetailVo();
     vo.id = user.id;
     vo.username = user.username;
-    vo.code = user.user_code;
+    vo.code = user.userCode;
     vo.email = user.email;
     vo.phone = user.phone;
-    vo.nickName = user.nick_name;
+    vo.nickName = user.nickName;
     vo.status = user.status === 1;
     vo.roles = user.roles.map((role) => ({
       id: role.id,
@@ -80,10 +80,10 @@ export class UserService {
       password: passwordHash,
       email,
       phone,
-      nick_name: nickName,
+      nickName,
       avatar,
       salt,
-      user_code: this.generateUserCode(),
+      userCode: this.generateUserCode(),
     });
     await this.userRepository.save(user);
     await this.redisService.del(`captcha_${email}`);
@@ -117,13 +117,13 @@ export class UserService {
     vo.userInfo = {
       id: user.id,
       username: user.username,
-      code: user.user_code,
+      code: user.userCode,
       email: user.email,
       phone: user.phone,
-      nick_name: user.nick_name,
+      nickName: user.nickName,
       avatar: user.avatar,
-      created_time: user.create_time,
-      updated_time: user.update_time,
+      createdTime: user.createTime,
+      updatedTime: user.updateTime,
       roles: user.roles,
       permissions: user.roles.reduce((acc: Permission[], role) => {
         if (Array.isArray(role.permissions)) {
@@ -178,7 +178,7 @@ export class UserService {
       where.username = Like(`%${username}%`);
     }
     if (nickName) {
-      where.nick_name = Like(`%${nickName}%`);
+      where.nickName = Like(`%${nickName}%`);
     }
     if (email) {
       where.email = Like(`%${email}%`);
@@ -221,7 +221,7 @@ export class UserService {
     if (!user) {
       throw new BadRequestException('用户不存在');
     }
-    await this.userRepository.update(id, { nick_name: nickName, avatar, phone, email, update_time: new Date() });
+    await this.userRepository.update(id, { nickName, avatar, phone, email, updateTime: new Date() });
     return '信息修改成功';
   }
 

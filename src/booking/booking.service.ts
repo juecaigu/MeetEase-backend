@@ -52,9 +52,9 @@ export class BookingService {
 
     const booking = await this.bookingRepository.findOne({
       where: {
-        meeting_room_id: meetingRoomId,
-        start_time: LessThanOrEqual(nearestHalfHourStartTime),
-        end_time: MoreThanOrEqual(nearestHalfHourEndTime),
+        meetingRoomId: meetingRoomId,
+        startTime: LessThanOrEqual(nearestHalfHourStartTime),
+        endTime: MoreThanOrEqual(nearestHalfHourEndTime),
         status: BookingStatus.DOING,
       },
     });
@@ -62,27 +62,27 @@ export class BookingService {
       throw new BadRequestException('会议室已被占用');
     }
     const newBooking = new Booking();
-    newBooking.start_time = nearestHalfHourStartTime;
-    newBooking.end_time = nearestHalfHourEndTime;
-    newBooking.meeting_room_id = meetingRoomId;
-    newBooking.meeting_room_name = meetingRoomName;
-    newBooking.meeting_room_location = meetingRoomLocation;
-    newBooking.meeting_room_code = meetingRoomCode || '';
+    newBooking.startTime = nearestHalfHourStartTime;
+    newBooking.endTime = nearestHalfHourEndTime;
+    newBooking.meetingRoomId = meetingRoomId;
+    newBooking.meetingRoomName = meetingRoomName;
+    newBooking.meetingRoomLocation = meetingRoomLocation;
+    newBooking.meetingRoomCode = meetingRoomCode || '';
     newBooking.remark = remark;
-    newBooking.user_id = id;
-    newBooking.user_name = username;
-    newBooking.user_code = userInfo.user_code;
-    newBooking.user_phone = userInfo.phone;
+    newBooking.userId = id;
+    newBooking.userName = username;
+    newBooking.userCode = userInfo.userCode;
+    newBooking.userPhone = userInfo.phone;
     newBooking.status = BookingStatus.DOING;
     if (Array.isArray(attendees) && attendees.length > 0) {
       const attendeesInfo = attendees.map((attendee) => {
-        const { id, name, phone, email, user_code } = attendee;
+        const { userId, name, phone, email, userCode } = attendee;
         return {
           name,
           phone,
-          user_id: id,
           email,
-          user_code,
+          userCode,
+          userId,
         };
       });
       newBooking.attendees = attendeesInfo as Attendees[];

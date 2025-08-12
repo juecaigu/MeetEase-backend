@@ -28,7 +28,7 @@ export class Equipment {
   quantity: number;
 
   @Column({ comment: '剩余数量', default: 0, type: 'int' })
-  remaining_quantity: number;
+  remainingQuantity: number;
 
   @Column({ comment: '设备类型' })
   type: string;
@@ -36,8 +36,8 @@ export class Equipment {
   @Column({ comment: '设备供应商' })
   supplier: string;
 
-  @Column({ comment: '采购日期' })
-  purchase_date: Date;
+  @Column({ type: 'datetime', comment: '采购日期', default: () => 'CURRENT_TIMESTAMP' })
+  purchaseDate: Date;
 
   @ManyToMany(() => MeetingRoom, {
     onDelete: 'CASCADE',
@@ -53,5 +53,5 @@ export class Equipment {
       referencedColumnName: 'id',
     },
   })
-  meeting_room: MeetingRoom[];
+  meetingRoom: MeetingRoom[];
 }
