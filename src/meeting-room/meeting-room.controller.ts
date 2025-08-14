@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Get, Query, ParseIntPipe, ParseEnumPipe } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, ParseIntPipe, ParseEnumPipe, Req } from '@nestjs/common';
 import { MeetingRoomService } from './meeting-room.service';
 import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
 import { SetMetadata } from '@nestjs/common';
 import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
 import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
 import { Status } from './type';
+import { Request } from 'express';
 
 @SetMetadata('requireLogin', true)
 @SetMetadata('requirePermission', ['meeting-room'])
@@ -40,5 +41,10 @@ export class MeetingRoomController {
   @Get('delete')
   delete(@Query('id', ParseIntPipe) id: number) {
     return this.meetingRoomService.delete(id);
+  }
+
+  @Get('delete/force')
+  deleteForce(@Query('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.meetingRoomService.deleteForce(id, req.user);
   }
 }

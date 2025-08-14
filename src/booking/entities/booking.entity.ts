@@ -59,9 +59,6 @@ export class Booking {
   @Column({ type: 'varchar', length: 255, comment: '取消用户名', nullable: true })
   cancelUserName?: string;
 
-  @Column({ type: 'varchar', length: 255, comment: '取消用户电话', nullable: true })
-  cancelUserPhone?: string;
-
   // 会议室参会人员
   @OneToMany(() => Attendees, (attendees) => attendees.booking, { cascade: true })
   attendees?: Attendees[];

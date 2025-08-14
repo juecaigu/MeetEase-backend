@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MeetingRoom } from './entities/meeting-room.entity';
@@ -8,12 +8,16 @@ import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
 import { Expression } from 'src/type/type';
 import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
 import { Status } from './type';
+import { Booking } from 'src/booking/entities/booking.entity';
+import { BookingStatus } from 'src/booking/type';
+import { JwtPayload } from 'src/user/login.guard';
 
 @Injectable()
 export class MeetingRoomService {
   constructor(
     @InjectRepository(MeetingRoom) private readonly meetingRoomRepository: Repository<MeetingRoom>,
     @InjectRepository(Equipment) private readonly equipmentRepository: Repository<Equipment>,
+    @InjectRepository(Booking) private readonly bookingRepository: Repository<Booking>,
   ) {}
 
   async create(createMeetingRoomDto: CreateMeetingRoomDto) {
@@ -108,8 +112,31 @@ export class MeetingRoomService {
     if (!findMeetingRoom) {
       throw new NotFoundException('会议室不存在');
     }
+    const booking = await this.bookingRepository.findOne({ where: { meetingRoomId: id } });
+    if (booking) {
+      throw new BadRequestException('会议室已被占用');
+    }
     await this.meetingRoomRepository.delete(id);
     // TODO: 删除会议室关联的设备,释放设备占用
+    return '删除成功';
+  }
+
+  async deleteForce(id: number, user: JwtPayload) {
+    const findMeetingRoom = await this.meetingRoomRepository.findOne({ where: { id } });
+    if (!findMeetingRoom) {
+      throw new NotFoundException('会议室不存在');
+    }
+    const booking = await this.bookingRepository.findOne({ where: { meetingRoomId: id, status: BookingStatus.DOING } });
+    if (booking) {
+      await this.bookingRepository.update(booking.id, {
+        status: BookingStatus.CANCELLED,
+        cancelTime: new Date(),
+        cancelUserId: user.id,
+        cancelUserName: user.username,
+        cancelReason: '会议室被删除,系统自动取消',
+      });
+    }
+    await this.meetingRoomRepository.delete(id);
     return '删除成功';
   }
 }

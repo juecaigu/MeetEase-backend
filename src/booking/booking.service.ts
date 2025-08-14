@@ -8,6 +8,7 @@ import { MeetingRoom } from 'src/meeting-room/entities/meeting-room.entity';
 import { User } from 'src/user/entities/user.entity';
 import { BookingStatus } from './type';
 import { Attendees } from './entities/attendees.entity';
+import { CancelBookingDto } from './dto/cancel-booking.dto';
 
 @Injectable()
 export class BookingService {
@@ -89,5 +90,24 @@ export class BookingService {
     }
     await this.bookingRepository.save(newBooking);
     return '预订成功';
+  }
+
+  async cancel(cancelBookingDto: CancelBookingDto, user: JwtPayload) {
+    const { id, cancelReason } = cancelBookingDto;
+    const { id: userId, username } = user;
+    const booking = await this.bookingRepository.findOne({ where: { id } });
+    if (!booking) {
+      throw new BadRequestException('预订记录不存在');
+    }
+    if (booking.status === BookingStatus.CANCELLED) {
+      return '预订记录已取消';
+    }
+    booking.status = BookingStatus.CANCELLED;
+    booking.cancelTime = new Date();
+    booking.cancelUserId = userId;
+    booking.cancelUserName = username;
+    booking.cancelReason = cancelReason;
+    await this.bookingRepository.save(booking);
+    return '取消成功';
   }
 }
