@@ -22,6 +22,8 @@ import { EquipmentModule } from './equipment/equipment.module';
 import { BookingModule } from './booking/booking.module';
 import { Booking } from './booking/entities/booking.entity';
 import { Attendees } from './booking/entities/attendees.entity';
+import { TasksModule } from './tasks/tasks.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
@@ -61,6 +63,7 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     typeOrmModule,
     UserModule,
     RedisModule,
@@ -72,6 +75,7 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
     MeetingRoomModule,
     EquipmentModule,
     BookingModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [

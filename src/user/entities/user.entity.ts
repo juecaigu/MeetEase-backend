@@ -18,7 +18,6 @@ export class User {
   @Column({
     length: 12,
     comment: '用户编码',
-    unique: true,
   })
   userCode: string;
 

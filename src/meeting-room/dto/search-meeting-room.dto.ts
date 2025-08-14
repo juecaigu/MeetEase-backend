@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Capacity, Status } from '../type';
+import { Capacity, MeetingRoomStatus } from '../type';
 import { IsExpressionObject } from 'src/decorators/is-expression-object.decorator';
 
 export class SearchMeetingRoomDto {
@@ -24,7 +24,7 @@ export class SearchMeetingRoomDto {
   location: string;
 
   @IsOptional()
-  status: Status;
+  status: MeetingRoomStatus;
 
   @IsOptional()
   @IsExpressionObject()

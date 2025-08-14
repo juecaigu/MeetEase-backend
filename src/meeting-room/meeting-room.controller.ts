@@ -4,7 +4,7 @@ import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
 import { SetMetadata } from '@nestjs/common';
 import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
 import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
-import { Status } from './type';
+import { MeetingRoomStatus } from './type';
 import { Request } from 'express';
 
 @SetMetadata('requireLogin', true)
@@ -29,7 +29,10 @@ export class MeetingRoomController {
   }
 
   @Get('update/status')
-  updateStatus(@Query('id', ParseIntPipe) id: number, @Query('status', new ParseEnumPipe(Status)) status: Status) {
+  updateStatus(
+    @Query('id', ParseIntPipe) id: number,
+    @Query('status', new ParseEnumPipe(MeetingRoomStatus)) status: MeetingRoomStatus,
+  ) {
     return this.meetingRoomService.updateStatus({ id, status });
   }
 

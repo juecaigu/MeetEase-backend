@@ -7,7 +7,7 @@ import { Equipment } from 'src/equipment/entities/equipment.entity';
 import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
 import { Expression } from 'src/type/type';
 import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
-import { Status } from './type';
+import { MeetingRoomStatus } from './type';
 import { Booking } from 'src/booking/entities/booking.entity';
 import { BookingStatus } from 'src/booking/type';
 import { JwtPayload } from 'src/user/login.guard';
@@ -57,7 +57,7 @@ export class MeetingRoomService {
     return '更新成功';
   }
 
-  async updateStatus(query: { id: number; status: Status }) {
+  async updateStatus(query: { id: number; status: MeetingRoomStatus }) {
     const { id, status } = query;
     const findMeetingRoom = await this.meetingRoomRepository.findOne({ where: { id } });
     if (!findMeetingRoom) {

@@ -7,10 +7,10 @@ export class Booking {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'datetime', comment: '开始时间', precision: 0, nullable: false })
+  @Column({ type: 'datetime', comment: '开始时间', precision: 0 })
   startTime: Date;
 
-  @Column({ type: 'datetime', comment: '结束时间', precision: 0, nullable: false })
+  @Column({ type: 'datetime', comment: '结束时间', precision: 0 })
   endTime: Date;
 
   @Column({ type: 'datetime', comment: '创建时间', default: () => 'CURRENT_TIMESTAMP' })

@@ -1,6 +1,6 @@
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Equipment } from 'src/equipment/entities/equipment.entity';
-import { Status } from '../type';
+import { MeetingRoomStatus } from '../type';
 
 @Entity()
 export class MeetingRoom {
@@ -19,8 +19,8 @@ export class MeetingRoom {
   @Column({ comment: '会议室位置' })
   location: string;
 
-  @Column({ comment: '会议室状态,0:空闲,1:使用中,2:维护中', default: 0 })
-  status: Status;
+  @Column({ comment: '会议室状态,0-不可用,1-可用,2-维护中,3-准备中', default: 1 })
+  status: MeetingRoomStatus;
 
   @Column({ comment: '会议室容量' })
   capacity: number;

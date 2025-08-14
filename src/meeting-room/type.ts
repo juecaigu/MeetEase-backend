@@ -1,9 +1,10 @@
 import { Expression } from 'src/type/type';
 
-export enum Status {
-  FREE = 0,
-  USING = 1,
+export enum MeetingRoomStatus {
+  UNAVAILABLE = 0,
+  FREE = 1,
   MAINTENANCE = 2,
+  PREPARING = 3,
 }
 
 export interface Capacity {

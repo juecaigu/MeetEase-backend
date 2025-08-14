@@ -3,12 +3,16 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { JwtPayload } from 'src/user/login.guard';
 import { Booking } from './entities/booking.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, Repository, MoreThanOrEqual } from 'typeorm';
+import { LessThanOrEqual, Repository, MoreThanOrEqual, FindOptionsWhere, Like } from 'typeorm';
 import { MeetingRoom } from 'src/meeting-room/entities/meeting-room.entity';
 import { User } from 'src/user/entities/user.entity';
 import { BookingStatus } from './type';
 import { Attendees } from './entities/attendees.entity';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
+import { ListBookingDto } from './dto/list-booking.dto';
+import { BookingVo } from './vo/booking.vo';
+import { AttendeesVo } from './vo/attendees.vo';
+import { MeetingRoomStatus } from 'src/meeting-room/type';
 
 @Injectable()
 export class BookingService {
@@ -39,9 +43,11 @@ export class BookingService {
       attendees,
       remark,
     } = createBookingDto;
-    const meetingRoom = await this.meetingRoomRepository.findOne({ where: { id: meetingRoomId } });
+    const meetingRoom = await this.meetingRoomRepository.findOne({
+      where: { id: meetingRoomId, status: MeetingRoomStatus.FREE },
+    });
     if (!meetingRoom) {
-      throw new BadRequestException('会议室不存在');
+      throw new BadRequestException('会议室不存在或不可用');
     }
     const { id, username } = user;
     const userInfo = await this.userRepository.findOne({ where: { id } });
@@ -50,6 +56,12 @@ export class BookingService {
     }
     const nearestHalfHourStartTime = this.getNearestHalfHour(startTime);
     const nearestHalfHourEndTime = this.getNearestHalfHour(endTime);
+    if (nearestHalfHourStartTime < new Date()) {
+      throw new BadRequestException('开始时间不能小于当前时间');
+    }
+    if (nearestHalfHourStartTime >= nearestHalfHourEndTime) {
+      throw new BadRequestException('开始时间不能大于结束时间');
+    }
 
     const booking = await this.bookingRepository.findOne({
       where: {
@@ -61,6 +73,17 @@ export class BookingService {
     });
     if (booking) {
       throw new BadRequestException('会议室已被占用');
+    }
+    const sameUserBooking = await this.bookingRepository.findOne({
+      where: {
+        userId: id,
+        status: BookingStatus.DOING,
+        startTime: LessThanOrEqual(nearestHalfHourStartTime),
+        endTime: MoreThanOrEqual(nearestHalfHourEndTime),
+      },
+    });
+    if (sameUserBooking) {
+      throw new BadRequestException('用户已有正在进行的会议');
     }
     const newBooking = new Booking();
     newBooking.startTime = nearestHalfHourStartTime;
@@ -92,6 +115,67 @@ export class BookingService {
     return '预订成功';
   }
 
+  async list(listBookingDto: ListBookingDto) {
+    const { pageNo, pageSize, meetingRoomName, meetingRoomCode, status, startTime, endTime, userName } = listBookingDto;
+    const where: FindOptionsWhere<Booking> = {};
+    if (meetingRoomName) {
+      where.meetingRoomName = Like(`%${meetingRoomName}%`);
+    }
+    if (meetingRoomCode) {
+      where.meetingRoomCode = Like(`%${meetingRoomCode}%`);
+    }
+    if (status) {
+      where.status = status;
+    }
+    if (startTime) {
+      where.startTime = MoreThanOrEqual(new Date(startTime));
+    }
+    if (endTime) {
+      where.endTime = LessThanOrEqual(new Date(endTime));
+    }
+    if (userName) {
+      where.userName = Like(`%${userName}%`);
+    }
+    const [list, total] = await this.bookingRepository.findAndCount({
+      where,
+      skip: (pageNo - 1) * pageSize,
+      take: pageSize,
+      order: {
+        createTime: 'DESC',
+      },
+      relations: ['attendees'],
+    });
+    const voList = list.map((item) => {
+      const vo = new BookingVo();
+      vo.id = item.id;
+      vo.startTime = item.startTime;
+      vo.endTime = item.endTime;
+      vo.userName = item.userName;
+      vo.userCode = item.userCode;
+      vo.status = item.status;
+      vo.meetingRoomId = item.meetingRoomId;
+      vo.meetingRoomName = item.meetingRoomName;
+      vo.meetingRoomCode = item.meetingRoomCode;
+      vo.meetingRoomLocation = item.meetingRoomLocation;
+      vo.remark = item.remark;
+      vo.cancelTime = item.cancelTime;
+      vo.cancelReason = item.cancelReason;
+      vo.cancelUserId = item.cancelUserId;
+      vo.cancelUserName = item.cancelUserName;
+      vo.attendees = (item.attendees || []).map((attendee) => {
+        const vo = new AttendeesVo();
+        vo.id = attendee.id;
+        vo.code = attendee.userCode || '';
+        vo.name = attendee.name || '';
+        vo.phone = attendee.phone;
+        vo.email = attendee.email;
+        return vo;
+      });
+      return vo;
+    });
+    return { list: voList, total };
+  }
+
   async cancel(cancelBookingDto: CancelBookingDto, user: JwtPayload) {
     const { id, cancelReason } = cancelBookingDto;
     const { id: userId, username } = user;
@@ -100,7 +184,7 @@ export class BookingService {
       throw new BadRequestException('预订记录不存在');
     }
     if (booking.status === BookingStatus.CANCELLED) {
-      return '预订记录已取消';
+      return '预订已被取消';
     }
     booking.status = BookingStatus.CANCELLED;
     booking.cancelTime = new Date();
