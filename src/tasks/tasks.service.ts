@@ -11,7 +11,6 @@ export class TasksService {
 
   @Cron(CronExpression.EVERY_30_MINUTES)
   handleBookingStatus() {
-    console.log('更新会议状态');
     try {
       void this.bookingRepository.update(
         {

@@ -24,6 +24,9 @@ import { Booking } from './booking/entities/booking.entity';
 import { Attendees } from './booking/entities/attendees.entity';
 import { TasksModule } from './tasks/tasks.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { WinstonModule, utilities } from 'nest-winston';
+import * as winston from 'winston';
+import 'winston-daily-rotate-file';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
@@ -53,11 +56,40 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
     database: configService.get<string>('DB_DATABASE'),
     entities: [User, Role, Permission, MeetingRoom, Equipment, Booking, Attendees],
     synchronize: true,
-    logging: true,
+    logging: ['query', 'error'],
+    maxQueryExecutionTime: configService.get<number>('MAX_QUERY_EXECUTION_TIME'),
     connectorPackage: 'mysql2',
     extra: {
       authPlugin: 'sha256_password',
     },
+  }),
+});
+
+const loggerModule = WinstonModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => ({
+    level: configService.get<string>('LOG_LEVEL'),
+    transports: [
+      new winston.transports.DailyRotateFile({
+        dirname: `${process.cwd()}/logs`,
+        filename: configService.get<string>('LOG_FILE_NAME'),
+        datePattern: 'YYYY-MM-DD',
+        zippedArchive: true,
+        json: false,
+        maxSize: configService.get<string>('LOG_MAX_SIZE'),
+        maxFiles: configService.get<string>('LOG_MAX_FILES'),
+        format: winston.format.combine(
+          winston.format.timestamp({
+            format: 'YYYY-MM-DD HH:mm:ss',
+          }),
+          winston.format.json(),
+        ),
+      }),
+      new winston.transports.Console({
+        format: winston.format.combine(winston.format.timestamp(), utilities.format.nestLike()),
+      }),
+    ],
   }),
 });
 
@@ -69,6 +101,7 @@ const typeOrmModule = TypeOrmModule.forRootAsync({
     RedisModule,
     configModule,
     jwtModule,
+    loggerModule,
     EmailModule,
     RoleModule,
     PermissionModule,
