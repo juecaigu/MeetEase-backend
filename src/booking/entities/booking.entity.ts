@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BookingStatus } from '../type';
 import { Attendees } from './attendees.entity';
+import { MeetingRoom } from 'src/meeting-room/entities/meeting-room.entity';
 
 @Entity()
 export class Booking {
@@ -28,17 +29,18 @@ export class Booking {
   @Column({ type: 'varchar', length: 255, comment: '用户电话' })
   userPhone?: string;
 
-  @Column({ type: 'int', comment: '会议室ID' })
-  meetingRoomId: number;
+  @ManyToOne(() => MeetingRoom, (meetingRoom) => meetingRoom.bookings)
+  @JoinColumn({ name: 'meetingRoomId' })
+  meetingRoomId: MeetingRoom;
 
-  @Column({ type: 'varchar', length: 255, comment: '会议室编码' })
-  meetingRoomCode: string;
+  // @Column({ type: 'varchar', length: 255, comment: '会议室编码' })
+  // meetingRoomCode: string;
 
-  @Column({ type: 'varchar', length: 255, comment: '会议室名称' })
-  meetingRoomName?: string;
+  // @Column({ type: 'varchar', length: 255, comment: '会议室名称' })
+  // meetingRoomName?: string;
 
-  @Column({ type: 'varchar', length: 255, comment: '会议室位置' })
-  meetingRoomLocation?: string;
+  // @Column({ type: 'varchar', length: 255, comment: '会议室位置' })
+  // meetingRoomLocation?: string;
 
   @Column({ type: 'int', comment: '状态', default: BookingStatus.CONFIRMED })
   status: BookingStatus;

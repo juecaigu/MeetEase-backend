@@ -72,7 +72,6 @@ export class MeetingRoomService {
 
   async list(searchMeetingRoomDto: SearchMeetingRoomDto) {
     const { pageNo, pageSize, name, code, location, status, capacity } = searchMeetingRoomDto;
-    console.log('searchMeetingRoomDto', searchMeetingRoomDto);
     const queryBuilder = this.meetingRoomRepository.createQueryBuilder('meetingRoom');
     if (name) {
       queryBuilder.where('meetingRoom.name LIKE :name', { name: `%${name}%` });
@@ -99,6 +98,7 @@ export class MeetingRoomService {
     }
     const [meetingRooms, total] = await queryBuilder
       .skip((pageNo - 1) * pageSize)
+      .leftJoinAndSelect('meetingRoom.equipment', 'equipment')
       .take(pageSize)
       .getManyAndCount();
     return {
@@ -112,7 +112,7 @@ export class MeetingRoomService {
     if (!findMeetingRoom) {
       throw new NotFoundException('会议室不存在');
     }
-    const booking = await this.bookingRepository.findOne({ where: { meetingRoomId: id } });
+    const booking = findMeetingRoom.bookings.find((booking) => booking.status === BookingStatus.DOING);
     if (booking) {
       throw new BadRequestException('会议室已被占用');
     }
@@ -126,7 +126,7 @@ export class MeetingRoomService {
     if (!findMeetingRoom) {
       throw new NotFoundException('会议室不存在');
     }
-    const booking = await this.bookingRepository.findOne({ where: { meetingRoomId: id, status: BookingStatus.DOING } });
+    const booking = findMeetingRoom.bookings.find((booking) => booking.status === BookingStatus.DOING);
     if (booking) {
       await this.bookingRepository.update(booking.id, {
         status: BookingStatus.CANCELLED,

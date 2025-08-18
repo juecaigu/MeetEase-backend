@@ -1,6 +1,7 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Equipment } from 'src/equipment/entities/equipment.entity';
 import { MeetingRoomStatus } from '../type';
+import { Booking } from 'src/booking/entities/booking.entity';
 
 @Entity()
 export class MeetingRoom {
@@ -40,6 +41,9 @@ export class MeetingRoom {
     },
   })
   equipment: Equipment[];
+
+  @OneToMany(() => Booking, (booking) => booking.meetingRoomId, { cascade: true })
+  bookings: Booking[];
 
   @Column({ comment: '会议室图片', nullable: true })
   image: string;
