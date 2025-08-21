@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   ParseBoolPipe,
+  Req,
   ParseFilePipe,
   ParseIntPipe,
   Post,
@@ -21,6 +22,7 @@ import { AssignRoleDto } from './dto/assign-role.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
 import { storage } from 'src/common/upload.storage';
+import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -62,8 +64,8 @@ export class UserController {
 
   @SetMetadata('requireLogin', true)
   @Post('update/password')
-  updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
-    return this.userService.updatePassword(updatePasswordDto);
+  updatePassword(@Body() updatePasswordDto: UpdatePasswordDto, @Req() req: Request) {
+    return this.userService.updatePassword(updatePasswordDto, req.user);
   }
 
   @SetMetadata('requireLogin', true)

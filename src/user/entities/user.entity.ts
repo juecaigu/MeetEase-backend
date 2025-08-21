@@ -30,7 +30,7 @@ export class User {
     length: 50,
     comment: '昵称',
   })
-  nickName: string;
+  nickname: string;
 
   @Column({
     comment: '邮箱',
@@ -44,6 +44,7 @@ export class User {
 
   @Column({
     comment: '头像',
+    default: '',
   })
   avatar: string;
 

@@ -10,18 +10,6 @@ export class CreateBookingDto {
   @IsDateString({}, { message: '结束时间必须为有效的日期字符串' })
   endTime: string;
 
-  @IsOptional()
-  @IsString({ message: '会议室编码必须为字符串' })
-  meetingRoomCode?: string;
-
-  @IsNotEmpty({ message: '会议室名称不能为空' })
-  @IsString({ message: '会议室名称必须为字符串' })
-  meetingRoomName: string;
-
-  @IsOptional()
-  @IsString({ message: '会议室位置必须为字符串' })
-  meetingRoomLocation?: string;
-
   @IsNotEmpty({ message: '会议室ID不能为空' })
   @IsNumber({}, { message: '会议室ID必须为数字' })
   meetingRoomId: number;

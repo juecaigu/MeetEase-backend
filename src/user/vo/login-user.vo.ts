@@ -7,7 +7,7 @@ interface UserInfo {
   code: string;
   email: string;
   phone: string;
-  nickName: string;
+  nickname: string;
   avatar: string;
   createdTime: Date;
   updatedTime: Date;

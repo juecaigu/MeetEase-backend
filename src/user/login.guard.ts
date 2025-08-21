@@ -9,6 +9,7 @@ import { Role } from 'src/role/entities/role.entity';
 export interface JwtPayload {
   id: number;
   username: string;
+  password: string;
   roles: Role[];
   permissions: Permission[];
 }

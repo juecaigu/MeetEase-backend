@@ -50,7 +50,7 @@ export class UserService {
     vo.code = user.userCode;
     vo.email = user.email;
     vo.phone = user.phone;
-    vo.nickName = user.nickName;
+    vo.nickname = user.nickname;
     vo.status = user.status === 1;
     vo.roles = user.roles.map((role) => ({
       id: role.id,
@@ -60,7 +60,7 @@ export class UserService {
   }
 
   async register(userRegisterDto: UserRegisterDto) {
-    const { username, password, email, phone, nickName, avatar, captcha } = userRegisterDto;
+    const { username, password, email, phone, nickname, avatar, captcha } = userRegisterDto;
     // 验证验证码
     const cacheCaptcha = await this.redisService.get(`captcha_${email}`);
     if (!cacheCaptcha) {
@@ -80,7 +80,7 @@ export class UserService {
       password: passwordHash,
       email,
       phone,
-      nickName,
+      nickname,
       avatar,
       salt,
       userCode: this.generateUserCode(),
@@ -120,7 +120,7 @@ export class UserService {
       code: user.userCode,
       email: user.email,
       phone: user.phone,
-      nickName: user.nickName,
+      nickname: user.nickname,
       avatar: user.avatar,
       createdTime: user.createTime,
       updatedTime: user.updateTime,
@@ -139,6 +139,7 @@ export class UserService {
     vo.token = this.jwtService.sign({
       id: user.id,
       username: user.username,
+      password: user.password,
       roles: vo.userInfo.roles,
       permissions: vo.userInfo.permissions,
     });
@@ -170,15 +171,15 @@ export class UserService {
     }
   }
 
-  async list(page: number, size: number, username: string, nickName: string, email: string, status: boolean) {
+  async list(page: number, size: number, username: string, nickname: string, email: string, status: boolean) {
     const pageNum = Math.max(page, 1);
     const pageSize = Math.max(size, 10);
     const where: FindOptionsWhere<User> = {};
     if (username) {
       where.username = Like(`%${username}%`);
     }
-    if (nickName) {
-      where.nickName = Like(`%${nickName}%`);
+    if (nickname) {
+      where.nickname = Like(`%${nickname}%`);
     }
     if (email) {
       where.email = Like(`%${email}%`);
@@ -195,8 +196,10 @@ export class UserService {
     return { users: users.map((user) => this.generateUserDetailVo(user)), total };
   }
 
-  async updatePassword(updatePasswordDto: UpdatePasswordDto) {
-    const { id, oldPassword, newPassword, captcha } = updatePasswordDto;
+  async updatePassword(updatePasswordDto: UpdatePasswordDto, userInfo: { id: number; password: string }) {
+    const { id, newPassword, captcha } = updatePasswordDto;
+    console.log('userInfo', userInfo);
+    const { password: oldPassword } = userInfo;
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new BadRequestException('用户不存在');
@@ -205,23 +208,25 @@ export class UserService {
     if (!cacheCaptcha || cacheCaptcha !== captcha) {
       throw new BadRequestException('验证码错误');
     }
-    const oldPasswordHash = md5(oldPassword + user.salt);
-    if (oldPasswordHash !== user.password) {
+    if (oldPassword !== user.password) {
       throw new BadRequestException('旧密码错误');
     }
     const newPasswordHash = md5(newPassword + user.salt);
+    if (oldPassword === newPasswordHash) {
+      throw new BadRequestException('新密码不能与旧密码相同');
+    }
     await this.userRepository.update(id, { password: newPasswordHash });
     await this.redisService.del(`captcha_${user.email}`);
     return '密码修改成功';
   }
 
   async updateInfo(updateUserInfoDto: UpdateUserInfoDto) {
-    const { id, nickName, avatar, phone, email } = updateUserInfoDto;
+    const { id, nickname, avatar, phone, email } = updateUserInfoDto;
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new BadRequestException('用户不存在');
     }
-    await this.userRepository.update(id, { nickName, avatar, phone, email, updateTime: new Date() });
+    await this.userRepository.update(id, { nickname, avatar, phone, email, updateTime: new Date() });
     return '信息修改成功';
   }
 

@@ -22,8 +22,8 @@ export class CustomExpectionFilter implements ExceptionFilter {
     response
       .json({
         code: exception.getStatus(),
-        message: 'fail',
-        data: message,
+        message: message,
+        data: null,
       })
       .end();
   }

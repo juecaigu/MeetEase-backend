@@ -33,16 +33,7 @@ export class BookingService {
   }
 
   async create(createBookingDto: CreateBookingDto, user: JwtPayload) {
-    const {
-      startTime,
-      endTime,
-      meetingRoomCode,
-      meetingRoomName,
-      meetingRoomLocation,
-      meetingRoomId,
-      attendees,
-      remark,
-    } = createBookingDto;
+    const { startTime, endTime, meetingRoomId, attendees, remark } = createBookingDto;
     const meetingRoom = await this.meetingRoomRepository.findOne({
       where: { id: meetingRoomId, status: MeetingRoomStatus.FREE },
     });
@@ -65,7 +56,9 @@ export class BookingService {
 
     const booking = await this.bookingRepository.findOne({
       where: {
-        meetingRoomId: meetingRoomId,
+        meetingRoomId: {
+          id: meetingRoomId,
+        },
         startTime: LessThanOrEqual(nearestHalfHourStartTime),
         endTime: MoreThanOrEqual(nearestHalfHourEndTime),
         status: BookingStatus.DOING,
@@ -88,10 +81,6 @@ export class BookingService {
     const newBooking = new Booking();
     newBooking.startTime = nearestHalfHourStartTime;
     newBooking.endTime = nearestHalfHourEndTime;
-    newBooking.meetingRoomId = meetingRoomId;
-    newBooking.meetingRoomName = meetingRoomName;
-    newBooking.meetingRoomLocation = meetingRoomLocation;
-    newBooking.meetingRoomCode = meetingRoomCode || '';
     newBooking.remark = remark;
     newBooking.userId = id;
     newBooking.userName = username;
@@ -116,14 +105,8 @@ export class BookingService {
   }
 
   async list(listBookingDto: ListBookingDto) {
-    const { pageNo, pageSize, meetingRoomName, meetingRoomCode, status, startTime, endTime, userName } = listBookingDto;
+    const { pageNo, pageSize, status, startTime, endTime, userName } = listBookingDto;
     const where: FindOptionsWhere<Booking> = {};
-    if (meetingRoomName) {
-      where.meetingRoomName = Like(`%${meetingRoomName}%`);
-    }
-    if (meetingRoomCode) {
-      where.meetingRoomCode = Like(`%${meetingRoomCode}%`);
-    }
     if (status) {
       where.status = status;
     }
@@ -153,10 +136,6 @@ export class BookingService {
       vo.userName = item.userName;
       vo.userCode = item.userCode;
       vo.status = item.status;
-      vo.meetingRoomId = item.meetingRoomId;
-      vo.meetingRoomName = item.meetingRoomName;
-      vo.meetingRoomCode = item.meetingRoomCode;
-      vo.meetingRoomLocation = item.meetingRoomLocation;
       vo.remark = item.remark;
       vo.cancelTime = item.cancelTime;
       vo.cancelReason = item.cancelReason;

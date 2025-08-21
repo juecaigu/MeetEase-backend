@@ -17,6 +17,7 @@ async function bootstrap() {
   app.useStaticAssets('uploads', {
     prefix: '/uploads',
   });
+  app.setGlobalPrefix('meetease');
   await app.listen(configService.get<number>('PORT') ?? 3000);
 }
 
