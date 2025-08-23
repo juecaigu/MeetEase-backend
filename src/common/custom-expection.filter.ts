@@ -15,13 +15,15 @@ export class CustomExpectionFilter implements ExceptionFilter {
     const req = ctx.getRequest<Request>();
     const data = Array.isArray(res?.message) ? res?.message.join(',') : res?.message;
     const message = data || exception.message;
+    const status = exception.getStatus();
     this.logger.error(message, {
       code: exception.getStatus(),
       req: getReqMainInfo(req),
     });
     response
+      .status(status)
       .json({
-        code: exception.getStatus(),
+        code: status,
         message: message,
         data: null,
       })

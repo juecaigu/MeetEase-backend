@@ -55,6 +55,7 @@ export class UserService {
     vo.roles = user.roles.map((role) => ({
       id: role.id,
       name: role.name,
+      admin: role.admin,
     }));
     return vo;
   }
@@ -194,6 +195,14 @@ export class UserService {
       relations: ['roles'],
     });
     return { users: users.map((user) => this.generateUserDetailVo(user)), total };
+  }
+
+  async getUserInfo(id: number) {
+    const user = await this.userRepository.findOne({ where: { id }, relations: ['roles'] });
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+    return this.generateUserDetailVo(user);
   }
 
   async updatePassword(updatePasswordDto: UpdatePasswordDto, userInfo: { id: number; password: string }) {

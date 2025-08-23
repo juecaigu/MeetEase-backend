@@ -43,6 +43,12 @@ export class UserController {
     return this.userService.login(loginDto);
   }
 
+  @SetMetadata('requireLogin', true)
+  @Get('userInfo')
+  userInfo(@Req() req: Request) {
+    return this.userService.getUserInfo(req.user.id);
+  }
+
   @Get('refresh/token')
   refreshToken(@Query('refresh_token') refreshToken: string) {
     return this.userService.refreshToken(refreshToken);
@@ -69,7 +75,7 @@ export class UserController {
   }
 
   @SetMetadata('requireLogin', true)
-  @Post('update/detail')
+  @Post('update/userInfo')
   updateInfo(@Body() updateInfoDto: UpdateUserInfoDto) {
     return this.userService.updateInfo(updateInfoDto);
   }

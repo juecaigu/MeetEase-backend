@@ -10,5 +10,6 @@ export class UserDetailVo {
   roles: {
     id: number;
     name: string;
+    admin: boolean;
   }[];
 }
