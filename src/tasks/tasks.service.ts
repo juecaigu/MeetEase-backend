@@ -14,6 +14,15 @@ export class TasksService {
     try {
       void this.bookingRepository.update(
         {
+          status: BookingStatus.CONFIRMED,
+          startTime: LessThanOrEqual(new Date()),
+        },
+        {
+          status: BookingStatus.DOING,
+        },
+      );
+      void this.bookingRepository.update(
+        {
           status: BookingStatus.DOING,
           endTime: LessThanOrEqual(new Date()),
         },

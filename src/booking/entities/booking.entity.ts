@@ -8,6 +8,9 @@ export class Booking {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'varchar', length: 255, comment: '会议名称' })
+  title: string;
+
   @Column({ type: 'datetime', comment: '开始时间', precision: 0 })
   startTime: Date;
 
@@ -33,8 +36,8 @@ export class Booking {
   userNickname?: string;
 
   @ManyToOne(() => MeetingRoom, (meetingRoom) => meetingRoom.bookings)
-  @JoinColumn({ name: 'meetingRoomId' })
-  meetingRoomId: MeetingRoom;
+  @JoinColumn({ name: 'meetingRoom' })
+  meetingRoom: MeetingRoom;
 
   // @Column({ type: 'varchar', length: 255, comment: '会议室编码' })
   // meetingRoomCode: string;

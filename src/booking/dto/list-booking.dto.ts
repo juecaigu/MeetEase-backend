@@ -11,6 +11,10 @@ export class ListBookingDto {
   pageSize: number;
 
   @IsOptional()
+  @IsString()
+  title: string;
+
+  @IsOptional()
   @IsEnum(BookingStatus, { message: '状态不正确' })
   status: BookingStatus;
 
@@ -25,4 +29,8 @@ export class ListBookingDto {
   @IsOptional()
   @IsString()
   userName: string;
+
+  @IsOptional()
+  @IsString()
+  meetingRoomName: string;
 }

@@ -2,6 +2,10 @@ import { IsNotEmpty, IsString, IsNumber, IsOptional, IsArray, IsDateString } fro
 import { Attendees } from '../entities/attendees.entity';
 
 export class CreateBookingDto {
+  @IsNotEmpty({ message: '会议名称不能为空' })
+  @IsString({ message: '会议名称必须为字符串' })
+  title: string;
+
   @IsNotEmpty({ message: '开始时间不能为空' })
   @IsDateString({}, { message: '开始时间必须为有效的日期字符串' })
   startTime: string;

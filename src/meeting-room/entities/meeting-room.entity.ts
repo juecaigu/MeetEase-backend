@@ -42,7 +42,7 @@ export class MeetingRoom {
   })
   equipment: Equipment[];
 
-  @OneToMany(() => Booking, (booking) => booking.meetingRoomId, { cascade: true })
+  @OneToMany(() => Booking, (booking) => booking.meetingRoom, { cascade: true })
   bookings: Booking[];
 
   @Column({ comment: '会议室图片', nullable: true })

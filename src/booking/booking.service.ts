@@ -11,8 +11,8 @@ import { Attendees } from './entities/attendees.entity';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { ListBookingDto } from './dto/list-booking.dto';
 import { BookingVo } from './vo/booking.vo';
-import { AttendeesVo } from './vo/attendees.vo';
 import { MeetingRoomStatus } from 'src/meeting-room/type';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class BookingService {
@@ -33,7 +33,7 @@ export class BookingService {
   }
 
   async create(createBookingDto: CreateBookingDto, user: JwtPayload) {
-    const { startTime, endTime, meetingRoomId, attendees, remark } = createBookingDto;
+    const { startTime, endTime, meetingRoomId, attendees, remark, title } = createBookingDto;
     const meetingRoom = await this.meetingRoomRepository.findOne({
       where: { id: meetingRoomId, status: MeetingRoomStatus.FREE },
     });
@@ -56,7 +56,7 @@ export class BookingService {
 
     const booking = await this.bookingRepository.findOne({
       where: {
-        meetingRoomId: {
+        meetingRoom: {
           id: meetingRoomId,
         },
         startTime: LessThanOrEqual(nearestHalfHourStartTime),
@@ -83,12 +83,13 @@ export class BookingService {
     newBooking.endTime = nearestHalfHourEndTime;
     newBooking.remark = remark;
     newBooking.userId = id;
+    newBooking.title = title;
     newBooking.userName = username;
     newBooking.userCode = userInfo.userCode;
     newBooking.userPhone = userInfo.phone;
     newBooking.userNickname = userInfo.nickname;
-    newBooking.status = BookingStatus.DOING;
-    newBooking.meetingRoomId = meetingRoom;
+    newBooking.status = BookingStatus.CONFIRMED;
+    newBooking.meetingRoom = meetingRoom;
     if (Array.isArray(attendees) && attendees.length > 0) {
       const attendeesInfo = attendees.map((attendee) => {
         const { userId, name, phone, email, userCode } = attendee;
@@ -107,19 +108,25 @@ export class BookingService {
   }
 
   async list(listBookingDto: ListBookingDto) {
-    const { pageNo, pageSize, status, startTime, endTime, userName } = listBookingDto;
+    const { pageNo, pageSize, status, startTime, endTime, userName, title, meetingRoomName } = listBookingDto;
     const where: FindOptionsWhere<Booking> = {};
     if (status) {
       where.status = status;
     }
-    if (startTime) {
-      where.startTime = MoreThanOrEqual(new Date(startTime));
+    if (title) {
+      where.title = Like(`%${title}%`);
     }
-    if (endTime) {
-      where.endTime = LessThanOrEqual(new Date(endTime));
+    if (startTime && endTime) {
+      where.startTime = LessThanOrEqual(new Date(endTime));
+      where.endTime = MoreThanOrEqual(new Date(startTime));
     }
     if (userName) {
       where.userName = Like(`%${userName}%`);
+    }
+    if (meetingRoomName) {
+      where.meetingRoom = {
+        name: Like(`%${meetingRoomName}%`),
+      };
     }
     const [list, total] = await this.bookingRepository.findAndCount({
       where,
@@ -128,30 +135,33 @@ export class BookingService {
       order: {
         createTime: 'DESC',
       },
-      relations: ['attendees'],
+      relations: ['attendees', 'meetingRoom'],
     });
     const voList = list.map((item) => {
       const vo = new BookingVo();
       vo.id = item.id;
-      vo.startTime = item.startTime;
-      vo.endTime = item.endTime;
+      vo.title = item.title;
+      vo.startTime = dayjs(item.startTime).format('YYYY-MM-DD HH:mm:ss');
+      vo.endTime = dayjs(item.endTime).format('YYYY-MM-DD HH:mm:ss');
       vo.userName = item.userName;
       vo.userCode = item.userCode;
       vo.status = item.status;
       vo.remark = item.remark;
-      vo.cancelTime = item.cancelTime;
+      vo.cancelTime = item.cancelTime ? dayjs(item.cancelTime).format('YYYY-MM-DD HH:mm:ss') : '';
       vo.cancelReason = item.cancelReason;
       vo.cancelUserId = item.cancelUserId;
       vo.cancelUserName = item.cancelUserName;
-      vo.attendees = (item.attendees || []).map((attendee) => {
-        const vo = new AttendeesVo();
-        vo.id = attendee.id;
-        vo.code = attendee.userCode || '';
-        vo.name = attendee.name || '';
-        vo.phone = attendee.phone;
-        vo.email = attendee.email;
-        return vo;
-      });
+      vo.createTime = dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss');
+      vo.meetingRoom = item.meetingRoom;
+      // vo.attendees = (item.attendees || []).map((attendee) => {
+      //   const vo = new AttendeesVo();
+      //   vo.id = attendee.id;
+      //   vo.code = attendee.userCode || '';
+      //   vo.name = attendee.name || '';
+      //   vo.phone = attendee.phone;
+      //   vo.email = attendee.email;
+      //   return vo;
+      // });
       return vo;
     });
     return { list: voList, total };

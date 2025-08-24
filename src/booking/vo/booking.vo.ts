@@ -1,21 +1,19 @@
+import { MeetingRoom } from 'src/meeting-room/entities/meeting-room.entity';
 import { BookingStatus } from '../type';
-import { AttendeesVo } from './attendees.vo';
 
 export class BookingVo {
   id: number;
-  startTime: Date;
-  endTime: Date;
+  title: string;
+  startTime: string;
+  endTime: string;
   userName: string;
   userCode: string;
   status: BookingStatus;
-  meetingRoomId: number;
-  attendees?: AttendeesVo[];
-  meetingRoomName?: string;
-  meetingRoomCode?: string;
-  meetingRoomLocation?: string;
+  meetingRoom: MeetingRoom;
   remark?: string;
-  cancelTime?: Date;
+  cancelTime?: string;
   cancelReason?: string;
   cancelUserId?: number;
   cancelUserName?: string;
+  createTime: string;
 }
