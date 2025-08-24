@@ -5,7 +5,7 @@ import { Request } from 'express';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { ListBookingDto } from './dto/list-booking.dto';
 
-@SetMetadata('permission', 'booking')
+// @SetMetadata('permission', 'booking')
 @SetMetadata('requireLogin', true)
 @Controller('booking')
 export class BookingController {

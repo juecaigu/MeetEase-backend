@@ -11,6 +11,8 @@ import { MeetingRoomStatus } from './type';
 import { Booking } from 'src/booking/entities/booking.entity';
 import { BookingStatus } from 'src/booking/type';
 import { JwtPayload } from 'src/user/login.guard';
+import { BookingMeetingRoomDto } from './dto/booking-meeting-room.dto';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class MeetingRoomService {
@@ -103,6 +105,63 @@ export class MeetingRoomService {
       .getManyAndCount();
     return {
       data: meetingRooms,
+      total,
+    };
+  }
+
+  async bookingList(searchMeetingRoomDto: BookingMeetingRoomDto) {
+    const { pageNo, pageSize, name, location, capacity, date } = searchMeetingRoomDto;
+    const startTime = dayjs(date).startOf('day').toDate();
+    const endTime = dayjs(date).endOf('day').toDate();
+
+    const queryBuilder = this.meetingRoomRepository
+      .createQueryBuilder('meetingRoom')
+      .leftJoinAndSelect('meetingRoom.equipment', 'equipment')
+      .leftJoinAndSelect(
+        'meetingRoom.bookings',
+        'bookings',
+        '(bookings.startTime BETWEEN :startTime AND :endTime OR bookings.endTime BETWEEN :startTime AND :endTime OR (bookings.startTime <= :startTime AND bookings.endTime >= :endTime)) AND bookings.status = :bookingStatus',
+        { startTime, endTime, bookingStatus: BookingStatus.DOING },
+      )
+      .where('meetingRoom.status = :roomStatus', { roomStatus: MeetingRoomStatus.FREE });
+
+    if (name) {
+      queryBuilder.andWhere('meetingRoom.name LIKE :name', { name: `%${name}%` });
+    }
+    if (location) {
+      queryBuilder.andWhere('meetingRoom.location LIKE :location', { location: `%${location}%` });
+    }
+
+    if (capacity?.expression && capacity?.value !== undefined) {
+      const { expression, value } = capacity;
+      if (expression === Expression.BETWEEN) {
+        queryBuilder.andWhere('meetingRoom.capacity BETWEEN :minCap AND :maxCap', {
+          minCap: value[0] as number,
+          maxCap: value[1] as number,
+        });
+      } else {
+        queryBuilder.andWhere(`meetingRoom.capacity ${expression} :capacity`, { capacity: value });
+      }
+    }
+
+    queryBuilder.skip((pageNo - 1) * pageSize).take(pageSize);
+
+    const [meetingRooms, total] = await queryBuilder.getManyAndCount();
+
+    const newMeetingRooms = meetingRooms.map((meetingRoom) => {
+      return {
+        ...meetingRoom,
+        bookings: meetingRoom.bookings.map((book) => {
+          return {
+            startTime: dayjs(book.startTime).format('YYYY-MM-DD HH:mm:ss'),
+            endTime: dayjs(book.endTime).format('YYYY-MM-DD HH:mm:ss'),
+          };
+        }),
+      };
+    });
+
+    return {
+      data: newMeetingRooms,
       total,
     };
   }

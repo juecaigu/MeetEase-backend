@@ -86,7 +86,9 @@ export class BookingService {
     newBooking.userName = username;
     newBooking.userCode = userInfo.userCode;
     newBooking.userPhone = userInfo.phone;
+    newBooking.userNickname = userInfo.nickname;
     newBooking.status = BookingStatus.DOING;
+    newBooking.meetingRoomId = meetingRoom;
     if (Array.isArray(attendees) && attendees.length > 0) {
       const attendeesInfo = attendees.map((attendee) => {
         const { userId, name, phone, email, userCode } = attendee;

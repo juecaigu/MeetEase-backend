@@ -29,6 +29,9 @@ export class Booking {
   @Column({ type: 'varchar', length: 255, comment: '用户电话' })
   userPhone?: string;
 
+  @Column({ type: 'varchar', length: 255, comment: '用户昵称', nullable: true, default: '' })
+  userNickname?: string;
+
   @ManyToOne(() => MeetingRoom, (meetingRoom) => meetingRoom.bookings)
   @JoinColumn({ name: 'meetingRoomId' })
   meetingRoomId: MeetingRoom;

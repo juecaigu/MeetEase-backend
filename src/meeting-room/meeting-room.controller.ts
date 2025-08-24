@@ -6,9 +6,10 @@ import { SearchMeetingRoomDto } from './dto/search-meeting-room.dto';
 import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
 import { MeetingRoomStatus } from './type';
 import { Request } from 'express';
+import { BookingMeetingRoomDto } from './dto/booking-meeting-room.dto';
 
 @SetMetadata('requireLogin', true)
-@SetMetadata('requirePermission', ['meeting-room'])
+// @SetMetadata('requirePermission', ['meeting-room'])
 @Controller('meeting-room')
 export class MeetingRoomController {
   constructor(private readonly meetingRoomService: MeetingRoomService) {}
@@ -39,6 +40,11 @@ export class MeetingRoomController {
   @Post('list')
   list(@Body() listMeetingRoomDto: SearchMeetingRoomDto) {
     return this.meetingRoomService.list(listMeetingRoomDto);
+  }
+
+  @Post('booking/list')
+  booking(@Body() listMeetingRoomDto: BookingMeetingRoomDto) {
+    return this.meetingRoomService.bookingList(listMeetingRoomDto);
   }
 
   @Get('delete')
