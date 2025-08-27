@@ -30,7 +30,7 @@ import 'winston-daily-rotate-file';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
-  envFilePath: ['src/.env'],
+  envFilePath: [process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.local'],
   cache: true,
 });
 
@@ -47,22 +47,24 @@ const jwtModule = JwtModule.registerAsync({
 const typeOrmModule = TypeOrmModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
-  useFactory: (configService: ConfigService) => ({
-    type: configService.get<'mysql' | 'mariadb'>('DB_TYPE'),
-    host: configService.get<string>('DB_HOST'),
-    port: configService.get<number>('DB_PORT'),
-    username: configService.get<string>('DB_USERNAME'),
-    password: configService.get<string>('DB_PASSWORD'),
-    database: configService.get<string>('DB_DATABASE'),
-    entities: [User, Role, Permission, MeetingRoom, Equipment, Booking, Attendees],
-    synchronize: true,
-    logging: ['query', 'error'],
-    maxQueryExecutionTime: configService.get<number>('MAX_QUERY_EXECUTION_TIME'),
-    connectorPackage: 'mysql2',
-    extra: {
-      authPlugin: 'sha256_password',
-    },
-  }),
+  useFactory: (configService: ConfigService) => {
+    return {
+      type: configService.get<'mysql' | 'mariadb'>('DB_TYPE'),
+      host: configService.get<string>('DB_HOST'),
+      port: configService.get<number>('DB_PORT'),
+      username: configService.get<string>('DB_USERNAME'),
+      password: configService.get<string>('DB_PASSWORD'),
+      database: configService.get<string>('DB_DATABASE'),
+      entities: [User, Role, Permission, MeetingRoom, Equipment, Booking, Attendees],
+      synchronize: true,
+      logging: ['query', 'error'],
+      maxQueryExecutionTime: configService.get<number>('MAX_QUERY_EXECUTION_TIME'),
+      connectorPackage: 'mysql2',
+      extra: {
+        authPlugin: 'sha256_password',
+      },
+    };
+  },
 });
 
 const loggerModule = WinstonModule.forRootAsync({
