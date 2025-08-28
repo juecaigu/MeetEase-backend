@@ -1,0 +1,47 @@
+version: '3.9'
+services:
+  nest-server:
+    container_name: 'meetease-app'
+    build:
+      context: ./
+      dockerfile: ./.dockerfile
+    ports:
+      - '3000:3000'
+    restart: on-failure
+    depends_on:
+      - mysql-server
+      - redis-server
+    networks:
+      - app-server
+  mysql-server:
+    container_name: 'meetease-mysql'
+    image: 'mysql:8.0'
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - '3306:3306'
+    volumes:
+      - /home/project/meetease/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE: meetease_db
+    secrets:
+      - mysql_root_password
+    networks:
+      - app-server
+  redis-server:
+    container_name: 'meetease-redis'
+    image: 'redis:8.2.1'
+    volumes:
+      - /home/project/meetease/redis:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - app-server
+
+networks:
+  app-server:
+    driver: bridge
+
+secrets:
+  mysql_root_password:
+    file: ./secrets/mysql_root_password
